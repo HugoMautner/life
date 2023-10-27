@@ -16,5 +16,5 @@ object Main:
 
     def main(args: Array[String]): Unit =
         println(help)
-        //val w = new LifeWindow(dim._1, dim._2)
-        //w.start()
+        val lifeWindow = new LifeWindow(dim._1, dim._2)
+        lifeWindow.start()

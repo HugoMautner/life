@@ -10,38 +10,43 @@ case class Life(cells: Matrix[Boolean]):
     def apply(row: Int, col: Int): Boolean = 
         // check if out of universe bounds
         if row < 0 || row > LifeWindow.windowSize._2 || col < 0 || col > LifeWindow.windowSize._1 then false
-        
-        cells(row)(col)
+        cells(row, col)
 
     /** Sätter status på cellen på plats (row, col) till value. */
     def updated(row: Int, col: Int, value: Boolean): Life = 
-        cells(row)(col) = value
+        Life(cells.updated(row, col)(value))
 
     /** Växlar status på cellen på plats (row, col). */
     def toggled(row: Int, col: Int): Life = 
-        cells(row)(col) = !cells(row)(col)
+        val oldValue = cells(row, col)
+        Life(cells.updated(row, col)(!oldValue))
 
     /** Räknar antalet levande grannar till cellen i (row, col). */
     def nbrOfNeighbours(row: Int, col: Int): Int = 
         var nbrLivingNeighbours: Int = 0
         for r <- row -1 to row + 1 do 
             for c <- col -1 to col + 1 do
-                if cells(r)(c) then nbrLivingNeighbours += 1
-        nbrLivingNeighbours - 1
+                if cells(r, c) then nbrLivingNeighbours += 1
+        nbrLivingNeighbours - 1  // disregard cell in question
 
     /** Skapar en ny Life-instans med nästa generation av universum.
         * Detta sker genom att applicera funktionen \code{rule} på cellerna.
         */
-    def evolved(rule: (Int, Int, Life) => Boolean = Life.defaultRule):Life =
+    def evolved(rule: (Int, Int, Life) => Boolean = Life.defaultRule): Life =
         var nextGeneration = Life.empty(cells.dim)
-        cells.foreachIndex( (r,c) =>
-        Life.defaultRule(rule)
+        cells.foreachIndex( (r, c) =>
+        ???
         )
         nextGeneration
 
     /** Radseparerad text där 0 är levande cell och - är död cell. */
     override def toString = 
-        ???
+        var res: String = ""
+        cells.foreachIndex( (row, col) => 
+            if cells(row, col) then res += '0'
+            else res += '-'
+            ???
+        )
 
 object Life:
     /** Skapar ett universum med döda celler. */
