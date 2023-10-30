@@ -21,27 +21,40 @@ case class Life(cells: Matrix[Boolean]):
         val oldValue = cells(row, col)
         Life(cells.updated(row, col)(!oldValue))
 
-    /** Räknar antalet levande grannar till cellen i (row, col). */
-    def nbrOfLivingNeighbours(row: Int, col: Int): Int =
+    /** Räknar antalet levande grannar till cellen i (row, col) enligt Moore's Neighbourhood. */
+    def mooreNeighbours(row: Int, col: Int): Int =
         val rowStart = Math.max(0, row - 1)
         val rowEnd = Math.min(cells.dim._1 - 1, row + 1)
         val colStart = Math.max(0, col - 1)
         val colEnd = Math.min(cells.dim._2 - 1, col + 1)
 
-        var nln: Int = 0
+        var neighbours: Int = 0
 
         for {
             r <- rowStart to rowEnd
             c <- colStart to colEnd
             if r != row || c != col
             if cells(r, c)
-        } nln += 1
-        nln
+        } neighbours += 1
+        neighbours
+    
+    /** Räknar antalet levande grannar till cellen i (row, col) enligt von Neumann's Neighbourhood. */
+    def vonNeumannNeighbours(row: Int, col: Int): Int =
+        val neighbors = List(
+            (row - 1, col), // North
+            (row + 1, col), // South
+            (row, col - 1), // West
+            (row, col + 1)  // East
+        )
+        neighbors.count{
+            case (r, c) => 
+                r >= 0 && r < cells.dim._1 && c >= 0 && c < cells.dim._2 && cells(r, c)
+        }
 
     /** Skapar en ny Life-instans med nästa generation av universum.
         * Detta sker genom att applicera funktionen \code{rule} på cellerna.
         */
-    def evolved(rule: (Int, Int, Life) => Boolean = Life.defaultRule): Life =
+    def evolved(rule: (Int, Int, Life) => Boolean = Life.castles): Life =
         var nextGeneration = Life.empty(cells.dim)
         cells.foreachIndex( (row, col) =>
             val nextState = rule(row, col, this)
@@ -78,7 +91,7 @@ object Life:
 
     /** Implementerar reglerna enligt Conways Game of Life. */
     def defaultRule(row: Int, col: Int, current: Life): Boolean = 
-        val nbrNeighbors = current.nbrOfLivingNeighbours(row, col)
+        val nbrNeighbors = current.mooreNeighbours(row, col)
         var newLife: Life = current
         if current(row, col) then // Lives
             if nbrNeighbors > 3 || 
@@ -87,3 +100,33 @@ object Life:
             if nbrNeighbors == 3 then newLife = current.toggled(row, col) // Birth
 
         newLife(row, col)
+
+    /** Invertamaze */
+    def invertamaze(row: Int, col: Int, current: Life): Boolean = 
+        val nbrNeighbors = current.mooreNeighbours(row, col)
+        var newLife: Life = current
+        val okNeighbors = Vector(0, 1, 2, 4)
+        val birthNeighbors = Vector(0, 2, 8)
+        
+        if current(row, col) then // Lives
+            if !okNeighbors.contains(nbrNeighbors) then newLife = current.updated(row, col, false) // Kill
+        else // Is dead
+            if birthNeighbors.contains(nbrNeighbors) then newLife = current.updated(row, col, true) // Birth
+
+        newLife(row, col)
+
+    /** Castles */
+    def castles(row: Int, col: Int, current: Life): Boolean = 
+        val nbrNeighbors = current.mooreNeighbours(row, col)
+        var newLife: Life = current
+        val okNeighbors = Vector(1, 3, 5, 6, 7, 8)
+        val birthNeighbors = Vector(3, 6, 7, 8)
+        
+        if current(row, col) then // Lives
+            if !okNeighbors.contains(nbrNeighbors) then newLife = current.updated(row, col, false) // Kill
+        else // Is dead
+            if birthNeighbors.contains(nbrNeighbors) then newLife = current.updated(row, col, true) // Birth
+
+        newLife(row, col)
+
+    
