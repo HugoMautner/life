@@ -1,7 +1,5 @@
 package life
 
-import math.random
-
 case class Life(cells: Matrix[Boolean]):
 
     /** Ger true om cellen på plats (row, col) är vid liv annars false.
@@ -9,8 +7,10 @@ case class Life(cells: Matrix[Boolean]):
     */
     def apply(row: Int, col: Int): Boolean = 
         // check if out of universe bounds
-        if row < 0 || row > LifeWindow.windowSize._2 || col < 0 || col > LifeWindow.windowSize._1 then false
-        cells(row, col)
+        if row < 0 || row > cells.dim._1 - 1 || col < 0 || col > cells.dim._2 - 1 
+            then false
+        else 
+            cells(row, col)
 
     /** Sätter status på cellen på plats (row, col) till value. */
     def updated(row: Int, col: Int, value: Boolean): Life = 
@@ -22,31 +22,43 @@ case class Life(cells: Matrix[Boolean]):
         Life(cells.updated(row, col)(!oldValue))
 
     /** Räknar antalet levande grannar till cellen i (row, col). */
-    def nbrOfNeighbours(row: Int, col: Int): Int = 
-        var nbrLivingNeighbours: Int = 0
-        for r <- row -1 to row + 1 do 
-            for c <- col -1 to col + 1 do
-                if cells(r, c) then nbrLivingNeighbours += 1
-        nbrLivingNeighbours - 1  // disregard cell in question
+    def nbrOfLivingNeighbours(row: Int, col: Int): Int =
+        val rowStart = Math.max(0, row - 1)
+        val rowEnd = Math.min(cells.dim._1 - 1, row + 1)
+        val colStart = Math.max(0, col - 1)
+        val colEnd = Math.min(cells.dim._2 - 1, col + 1)
+
+        var nln: Int = 0
+
+        for {
+            r <- rowStart to rowEnd
+            c <- colStart to colEnd
+            if r != row || c != col
+            if cells(r, c)
+        } nln += 1
+        nln
 
     /** Skapar en ny Life-instans med nästa generation av universum.
         * Detta sker genom att applicera funktionen \code{rule} på cellerna.
         */
     def evolved(rule: (Int, Int, Life) => Boolean = Life.defaultRule): Life =
         var nextGeneration = Life.empty(cells.dim)
-        cells.foreachIndex( (r, c) =>
-        ???
+        cells.foreachIndex( (row, col) =>
+            val nextState = rule(row, col, this)
+            nextGeneration = nextGeneration.updated(row, col, nextState)
         )
         nextGeneration
 
     /** Radseparerad text där 0 är levande cell och - är död cell. */
-    override def toString = 
+    override def toString: String = 
         var res: String = ""
         cells.foreachIndex( (row, col) => 
             if cells(row, col) then res += '0'
             else res += '-'
-            ???
+            if col < cells.dim._2 - 1 then res += ' '
+            if col == cells.dim._2 - 1 && row < cells.dim._1 - 1 then res += '\n'
         )
+        res
 
 object Life:
     /** Skapar ett universum med döda celler. */
@@ -56,15 +68,22 @@ object Life:
     /** Skapar ett unviversum med slumpmässigt liv. */
     def random(dim: (Int, Int)): Life = 
         import scala.util.Random.nextBoolean
-        val newLife = Life(Matrix.fill(dim)(false))
-
+        var life = empty(dim)
+        life.cells.foreachIndex( (r, c) =>
+            // toggle random cells
+            if nextBoolean() then
+                life = life.toggled(r, c)
+        )
+        life
 
     /** Implementerar reglerna enligt Conways Game of Life. */
     def defaultRule(row: Int, col: Int, current: Life): Boolean = 
-        if current.cells(row)(col) then 
-            if current.nbrOfNeighbours(row, col) > 3 || 
-                current.nbrOfNeighbours(row, col) < 2 then current.toggled(row, col)
-        else 
-            if current.nbrOfNeighbours(row)(col) == 3 then current.toggled(row, col)
+        val nbrNeighbors = current.nbrOfLivingNeighbours(row, col)
+        var newLife: Life = current
+        if current(row, col) then // Lives
+            if nbrNeighbors > 3 || 
+                nbrNeighbors < 2 then newLife = current.toggled(row, col) // Kill
+        else // Is dead
+            if nbrNeighbors == 3 then newLife = current.toggled(row, col) // Birth
 
-        current.cells(row)(col)
+        newLife(row, col)
