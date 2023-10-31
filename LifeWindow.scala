@@ -41,9 +41,10 @@ class LifeWindow(rows: Int, cols: Int):
         val oldLife = life
         life = newLife
         life.cells.foreachIndex( (r, c) =>
-            if oldLife(r, c) != life(r, c) then
-                if life(r, c) then drawCell(r, c, Colors.cellLiving)
-                else drawCell(r, c, Colors.space)
+            val isCellLiving = life(r, c)
+            val wasCellLiving = oldLife(r, c)
+            if isCellLiving != wasCellLiving then
+                drawCell(r, c, if isCellLiving then Colors.cellLiving else Colors.space)
         )
 
     def handleKey(key: String): Unit = 

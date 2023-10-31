@@ -1,11 +1,11 @@
 {
   "name": "scala-cli",
   "argv": [
-    "/Users/hugomautner/Library/Application Support/Coursier/bin/.scala-cli.aux",
+    "C:\\Users\\Hugo 2\\AppData\\Local\\Coursier\\data\\bin\\.scala-cli.aux.exe",
     "bsp",
     "--json-options",
-    "/Users/hugomautner/Documents/pgk/w08/life/.scala-build/ide-options-v2.json",
-    "/Users/hugomautner/Documents/pgk/w08/life"
+    "C:\\Users\\Hugo 2\\Documents\\GitHub\\Pgk\\w08\\life\\.scala-build\\ide-options-v2.json",
+    "C:\\Users\\Hugo 2\\Documents\\GitHub\\Pgk\\w08\\life"
   ],
   "version": "1.0.4",
   "bspVersion": "2.1.0-M5",

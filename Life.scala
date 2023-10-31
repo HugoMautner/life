@@ -23,20 +23,13 @@ case class Life(cells: Matrix[Boolean]):
 
     /** Räknar antalet levande grannar till cellen i (row, col) enligt Moore's Neighbourhood. */
     def mooreNeighbours(row: Int, col: Int): Int =
-        val rowStart = Math.max(0, row - 1)
-        val rowEnd = Math.min(cells.dim._1 - 1, row + 1)
-        val colStart = Math.max(0, col - 1)
-        val colEnd = Math.min(cells.dim._2 - 1, col + 1)
+        val neighborCoordinates = for {
+            r <- (row - 1) to (row + 1)
+            c <- (col - 1) to (col + 1)
+            if (r != row || c != col) && r >= 0 && r < cells.dim._1 && c >= 0 && c < cells.dim._2
+        } yield (r, c)
 
-        var neighbours: Int = 0
-
-        for {
-            r <- rowStart to rowEnd
-            c <- colStart to colEnd
-            if r != row || c != col
-            if cells(r, c)
-        } neighbours += 1
-        neighbours
+        neighborCoordinates.count { case (r, c) => cells(r, c) }
     
     /** Räknar antalet levande grannar till cellen i (row, col) enligt von Neumann's Neighbourhood. */
     def vonNeumannNeighbours(row: Int, col: Int): Int =
@@ -54,7 +47,7 @@ case class Life(cells: Matrix[Boolean]):
     /** Skapar en ny Life-instans med nästa generation av universum.
         * Detta sker genom att applicera funktionen \code{rule} på cellerna.
         */
-    def evolved(rule: (Int, Int, Life) => Boolean = Life.castles): Life =
+    def evolved(rule: (Int, Int, Life) => Boolean = Life.defaultRule): Life =
         var nextGeneration = Life.empty(cells.dim)
         cells.foreachIndex( (row, col) =>
             val nextState = rule(row, col, this)
